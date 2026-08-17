@@ -1,0 +1,142 @@
+set.seed(5678)
+
+library(DESeq2)
+library(tximport)
+library(tidyverse)
+library(AnnotationDbi)
+library(AnnotationHub)
+library(org.Mm.eg.db)
+library(data.table) 
+library(clusterProfiler)
+library(TxDb.Mmusculus.UCSC.mm10.knownGene)
+library(EnhancedVolcano)
+library(ggstance)
+library(enrichplot)
+library(forcats)
+library(ggplot2)
+
+design = read.table("design_subset_RANM10.csv", header=T, sep=",")
+
+Design_subset_RANM10.csv
+
+sample	Hormone	Chromosome
+HfXX1	F	X
+HfXX2	F	X
+HfXX3	F	X
+HfXY1	F	Y
+HfXY2	F	Y
+HfXY3	F	Y
+HmXX1	M	X
+HmXX2	M	X
+HmXX3	M	X
+HmXY1	M	Y
+HmXY2	M	Y
+HmXY3	M	Y
+
+Import Txi from the kallisto files.
+txi <- read.csv("txi_umair.csv", row.names = 1, header = TRUE)
+
+dim(txi)
+
+# Select only the columns that contain raw counts
+count_data <- txi[, grep("^counts\\.", colnames(txi))]  # Extract only count columns
+colnames(count_data) <- gsub("^counts\\.", "", colnames(count_data))  # Clean column names
+design$Chromosome <- relevel(as.factor(design$Chromosome), ref = "X")
+design$Hormone <- relevel(as.factor(design$Hormone), ref = "F")
+
+dds <- DESeqDataSetFromMatrix(countData = round(count_data), 
+                              colData = design, 
+                              design = ~ Hormone + Chromosome + Hormone:Chromosome)
+
+plot(rowMeans(round(count_data)), apply(round(count_data), 1, var), log="xy")
+abline(0,1, lwd=2, lty=2)
+
+#Basic Usage 
+dds = DESeq(dds)
+
+#Graphical Check for model mean-disp fitting
+plotDispEsts(dds)
+
+#Model fit seems a good fit for data
+resultsNames(dds)
+
+
+res_mrvsme_brain = results(dds,name="Chromosome_Y_vs_X")
+res_mrvsme_brain_shrink = lfcShrink(dds, coef =  "Chromosome_Y_vs_X", type="ashr")
+
+summary(res_mrvsme_brain_shrink)
+plotMA(res_mrvsme_brain_shrink)
+
+res_mrvsme_brain_shrink.df <- as.data.frame(res_mrvsme_brain_shrink)
+
+
+res_mrvsme_brain_shrink.df$symbol <- mapIds(org.Mm.eg.db, 
+                                            keys = clean_ens_ids, 
+                                            keytype = "ENSEMBL", 
+                                            column = "SYMBOL", 
+                                            multiVals = "first")
+
+write.csv(res_mrvsme_brain_shrink.df,"chromosomal_comparison_DEGs.csv")
+
+head(rownames(res_mrvsme_brain_shrink.df)
+     
+#to annnotate Significant genes against their respective chromosomes#
+     genes <- genes(TxDb.Mmusculus.UCSC.mm10.knownGene)
+     genes_df <- as.data.frame(genes)
+     entrez <- mapIds(org.Mm.eg.db, clean_ens_ids, keytype = 'ENSEMBL', column = 'ENTREZID')
+     entrez<- as.data.frame(entrez)
+     
+     data_all <- merge.data.table(entrez,    
+                                  genes_df,
+                                  by.x = "entrez",
+                                  by.y = "gene_id")
+
+
+data_all
+
+Ensembl_GeneNames <- bitr(data_all$entrez, fromType = "ENTREZID",
+                          toType = c("SYMBOL"),
+                          OrgDb = org.Mm.eg.db)
+
+
+data_all <- merge.data.table(Ensembl_GeneNames,    
+                             data_all,
+                             by.x = "ENTREZID",
+                             by.y = "entrez")
+merge_Chr_all_genes <- merge.data.table(res_mrvsme_brain_shrink.df,    
+                                        data_all,
+                                        by.x = "symbol",
+                                        by.y = "SYMBOL")
+merge_Chr_all_genes<- as.data.frame(merge_Chr_all_genes)
+
+write.csv(merge_Chr_all_genes,"DEGschromsomal_comparison.csv")
+
+EnhancedVolcano(merge_Chr_all_genes,
+                lab = merge_Chr_all_genes$symbol,
+                selectLab = c("Tmsb4x","Tlr8","Tlr7","Prps2","Frmpd4","Msl3","Arhgap6",
+                              "Amelx","Hccs"),
+                x = 'log2FoldChange',
+                y = 'pvalue',
+                xlab = bquote(~Log[2]~ 'fold change'),
+                title = 'X_linked_genes_translocat_ reported',
+                subtitle = "All_genes",
+                pCutoff = 0.05,
+                FCcutoff = 1,
+                pointSize = 1,
+                labSize = 3.0,
+                labCol = 'blue',
+                labFace = 'bold',
+                boxedLabels = TRUE,
+                col = c("grey","navyblue","red","green"),
+                colAlpha = 1/5,
+                legendPosition = 'right',
+                legendLabSize = 14,
+                legendIconSize = 1.0,
+                drawConnectors = TRUE,
+                widthConnectors = 1,
+                arrowheads = FALSE,
+                lengthConnectors = unit(1, 'npc'),
+                xlim = c(-5,5),
+                ylim = c(0,25
+                        ),
+                colConnectors = 'black')
