@@ -1,11 +1,3 @@
-Design 
-sample,	group,	pair_id,	day_sacrifice
-sample_10	me	A	59
-sample_11	me	B	51
-sample_72	me	C	35
-sample_1	mr	A	58
-sample_44	mr	B	58
-sample_43	mr	C	35
 
 set.seed(5678)
 
