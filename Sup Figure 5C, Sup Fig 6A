@@ -33,15 +33,17 @@ sample_31	brain	mr	A	58
 sample_62	brain	mr	B	58
 sample_61	brain	mr	C	35
 
+
+#Here we define spleen as reference factor for DE analyses
+design$tissue = relevel(as.factor(design$tissue), ref="spleen")
 #Here we define me as reference factor for DE analyses
 design$group = relevel(as.factor(design$group), ref="me")
-design$tissue= relevel(as.factor(design$group), ref="spleen")
 txi = readRDS("MRMEBR_subset_txi.rds")
 
 #In design: tissue for tissue-level analysis, group for me vs mr analysis while group:tissue for interaction model
 #Interaction term says us whether the gene is DE across  between two tissues conditionally on disease status
 
-dds = DESeqDataSetFromMatrix(countData= round(txi$counts), colData = design, design = ~pair_id+group)
+dds = DESeqDataSetFromMatrix(countData= round(txi$counts), colData = design, design = ~pair_id+tissue+group+tissue:group)
 plot(rowMeans(round(txi$counts)), apply(round(txi$counts), 1, var), log="xy")
 abline(0,1, lwd=2, lty=2)
 #We do have indeed some surdispersion
@@ -55,10 +57,10 @@ plotDispEsts(dds)
 #Model fit seems a good fit for data
 resultsNames(dds)
 
-# SC vs Spleen interactive model
+# Brain vs Spleen interactive model
 
-res_mrvsme_brain = results(dds,name="group_mr_vs_me")
-res_mrvsme_brain_shrink = lfcShrink(dds, coef =  "group_mr_vs_me", type="ashr")
+res_mrvsme_brain = results(dds,name="tissueSC.groupmr")
+res_mrvsme_brain_shrink = lfcShrink(dds, coef =  "tissueSC.groupmr", type="ashr")
 
 summary(res_mrvsme_brain_shrink)
 plotMA(res_mrvsme_brain_shrink)
@@ -103,21 +105,21 @@ write.csv(merge_Chr_all_genes,"All_genes_MRvsME_Brainvsbrain_paired_Genelist_chr
 
 EnhancedVolcano(merge_Chr_all_genes,
                 lab = merge_Chr_all_genes$symbol,
-                selectLab = c(""),
+                selectLab = c("Zfp629","Zfp609","Zfp444"),
                 x = 'log2FoldChange',
                 y = 'pvalue',
                 xlab = bquote(~Log[2]~ 'fold change'),
-                title = 'M_severevsM_Mild_SpleenvsSpleen',
-                subtitle = "All_genes",
+                title = 'MRvsME_brainvsSpleen',
+                subtitle = "All_genes_in_results",
                 pCutoff = 0.05,
                 FCcutoff = 1.5,
-                pointSize = 1,
+                pointSize = 2.0,
                 labSize = 3.0,
                 labCol = 'blue',
                 labFace = 'bold',
                 boxedLabels = TRUE,
                 col = c("grey","navyblue","red","green"),
-                colAlpha = 1/5,
+                colAlpha = 4/5,
                 legendPosition = 'right',
                 legendLabSize = 14,
                 legendIconSize = 1.0,
@@ -125,34 +127,10 @@ EnhancedVolcano(merge_Chr_all_genes,
                 widthConnectors = 1,
                 arrowheads = FALSE,
                 lengthConnectors = unit(1, 'npc'),
-                xlim = c(-10, 10),
-                ylim = c(0,10),
+                xlim = c(-30, 30),
+                ylim = c(0,50),
                 colConnectors = 'black')
 
-signi.DEG.MRvsME.brain = res_mrvsme_brain_shrink[which(res_mrvsme_brain_shrink$padj<=0.1),]
-signi.DEG.MRvsME.brain
-
-
-
-rownames(signi.DEG.MRvsME.brain)
-sig.genes <- as.data.frame(signi.DEG.MRvsME.brain)
-
-signi.DEG.MRvsME.brain = res_mrvsme_brain_shrink[which(res_mrvsme_brain_shrink$padj<=0.1),]
-signi.DEG.MRvsME.brain
-
-sig.genes <- as.data.frame(signi.DEG.MRvsME.brain)
-
-genes_to_test <- rownames(signi.DEG.MRvsME.brain)
-
-genes_to_test
-ego_sex <- enrichGO(gene = genes_to_test,
-                    OrgDb = org.Mm.eg.db,
-                    keyType = "ENSEMBL",
-                    ont = "ALL",
-                    readable = TRUE)
-
-cluster_summary_FRFE.brain <-as.data.frame(ego_sex)
-fit <-plot(barplot(ego_sex,showCategory=10))
 
 # Gene set enrichment analysis
 
@@ -176,11 +154,11 @@ gene_list = sort(gene_list, decreasing = TRUE)
 gene_list
 
 gse <- gseGO(geneList=gene_list, 
-             ont ="BP", 
+             ont ="ALL", 
              keyType = "ENSEMBL", 
+             nPerm = 10000, 
              minGSSize = 3, 
              maxGSSize = 800, 
-             nPerm = 100000,
              pvalueCutoff = 0.05, 
              verbose = TRUE, 
              OrgDb = org.Mm.eg.db, 
@@ -188,6 +166,3 @@ gse <- gseGO(geneList=gene_list,
 
 GSE<-as.data.frame(gse)
 write.csv(GSE,"GSE_MRvsME_paired_brainvsbrain.csv")
-
-
-
