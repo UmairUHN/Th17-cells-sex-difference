@@ -1,0 +1,201 @@
+Design 
+sample,	group,	pair_id,	day_sacrifice
+sample_10	me	A	59
+sample_11	me	B	51
+sample_72	me	C	35
+sample_1	mr	A	58
+sample_44	mr	B	58
+sample_43	mr	C	35
+
+set.seed(5678)
+
+library(DESeq2)
+library(tximport)
+library(tidyverse)
+library(AnnotationDbi)
+library(AnnotationHub)
+library(org.Mm.eg.db)
+library(data.table) 
+library(clusterProfiler)
+library(TxDb.Mmusculus.UCSC.mm10.knownGene)
+library(EnhancedVolcano)
+library(ggstance)
+library(enrichplot)
+library(forcats)
+library(ggplot2)
+
+
+design = read.table("design_subset_RANM003.csv", header=T, sep=",")
+
+design_subset_RANM003.csv 
+sample,	group,	pair_id,	day_sacrifice
+sample_10	me	A	59
+sample_11	me	B	51
+sample_72	me	C	35
+sample_1	mr	A	58
+sample_44	mr	B	58
+sample_43	mr	C	35
+
+#Here we define me as reference factor for DE analyses
+design$group = relevel(as.factor(design$group), ref="me")
+#uplad txi files created for same sample name from Kallisto
+txi = readRDS("MRMESP_subset_txi.rds")
+
+#In design: group for me vs mr analysis while pair id for pairing the mice sarcrificed at closer time point
+
+dds = DESeqDataSetFromMatrix(countData= round(txi$counts), colData = design, design = ~pair_id+group)
+plot(rowMeans(round(txi$counts)), apply(round(txi$counts), 1, var), log="xy")
+abline(0,1, lwd=2, lty=2)
+#We do have indeed some surdispersion
+
+#Basic Usage 
+dds = DESeq(dds)
+
+#Graphical Check for model mean-disp fitting
+plotDispEsts(dds)
+
+#Model fit seems a good fit for data
+resultsNames(dds)
+
+res_mrvsme_brain = results(dds,name="group_mr_vs_me")
+res_mrvsme_brain_shrink = lfcShrink(dds, coef =  "group_mr_vs_me", type="ashr")
+
+summary(res_mrvsme_brain_shrink)
+plotMA(res_mrvsme_brain_shrink)
+
+res_mrvsme_brain_shrink.df <- as.data.frame(res_mrvsme_brain_shrink)
+
+res_mrvsme_brain_shrink.df$symbol <-mapIds(org.Mm.eg.db, keys = rownames(res_mrvsme_brain_shrink.df), keytype = "ENSEMBL",column = 'SYMBOL')
+res_mrvsme_brain_shrink.df
+
+write.csv(res_mrvsme_brain_shrink.df,"res_mrvsme_brain_shrink.df(paired).csv")
+
+#to annnotate genes against their respective chromosomes
+
+genes <- genes(TxDb.Mmusculus.UCSC.mm10.knownGene)
+genes_df <- as.data.frame(genes)
+entrez <-  mapIds(org.Mm.eg.db, rownames(res_mrvsme_brain_shrink.df), keytype = 'ENSEMBL', column = 'ENTREZID')
+entrez<- as.data.frame(entrez)
+
+data_all <- merge.data.table(entrez,    
+                             genes_df,
+                             by.x = "entrez",
+                             by.y = "gene_id")
+data_all
+
+Ensembl_GeneNames <- bitr(data_all$entrez, fromType = "ENTREZID",
+                          toType = c("SYMBOL"),
+                          OrgDb = org.Mm.eg.db)
+data_all <- merge.data.table(Ensembl_GeneNames,    
+                             data_all,
+                             by.x = "ENTREZID",
+                             by.y = "entrez")
+
+merge_Chr_all_genes <- merge.data.table(res_mrvsme_brain_shrink.df,    
+                                        data_all,
+                                        by.x = "symbol",
+                                        by.y = "SYMBOL")
+
+merge_Chr_all_genes<- as.data.frame(merge_Chr_all_genes)
+write.csv(merge_Chr_all_genes,"All_genes_MRvsME_Brainvsbrain_paired_Genelist_chr_IDs.csv")
+
+EnhancedVolcano(merge_Chr_all_genes,
+                lab = merge_Chr_all_genes$symbol,
+                selectLab = c(""),
+                x = 'log2FoldChange',
+                y = 'pvalue',
+                xlab = bquote(~Log[2]~ 'fold change'),
+                title = 'M_severevsM_Mild_SpleenvsSpleen',
+                subtitle = "All_genes",
+                pCutoff = 0.05,
+                FCcutoff = 1.5,
+                pointSize = 1,
+                labSize = 3.0,
+                labCol = 'blue',
+                labFace = 'bold',
+                boxedLabels = TRUE,
+                col = c("grey","navyblue","red","green"),
+                colAlpha = 1/5,
+                legendPosition = 'right',
+                legendLabSize = 14,
+                legendIconSize = 1.0,
+                drawConnectors = TRUE,
+                widthConnectors = 1,
+                arrowheads = FALSE,
+                lengthConnectors = unit(1, 'npc'),
+                xlim = c(-10, 10),
+                ylim = c(0,10),
+                colConnectors = 'black')
+
+# Gene set enrichment analysis
+
+res_mrvsme_brain_shrink.df <- as.data.frame(res_mrvsme_brain_shrink)
+write.csv(res_mrvsme_brain_shrink.df,"res_mrvsme_brain_shrink_1.csv")
+
+# reading in data from deseq2
+df = read.csv("res_mrvsme_brain_shrink_1.csv", header=TRUE)
+
+# we want the log2 fold change 
+original_gene_list <- df$log2FoldChange
+
+# name the vector
+names(original_gene_list) <- df$X
+
+# omit any NA values 
+gene_list<-na.omit(original_gene_list)
+
+# sort the list in decreasing order (required for clusterProfiler)
+gene_list = sort(gene_list, decreasing = TRUE)
+gene_list
+
+gse <- gseGO(geneList=gene_list, 
+             ont ="ALL", 
+             keyType = "ENSEMBL", 
+             nPerm = 10000, 
+             minGSSize = 3, 
+             maxGSSize = 800, 
+             pvalueCutoff = 0.05, 
+             verbose = TRUE, 
+             OrgDb = org.Mm.eg.db, 
+             pAdjustMethod = "BH")
+
+GSE<-as.data.frame(gse)
+write.csv(GSE,"GSE_MRvsME_paired_brainvsbrain.csv")
+
+# Extract values for the GO term
+term <- subset(gse@result, ID == "GO:0007283")
+
+NES <- round(term$NES, 2)
+qval <- signif(term$qvalue, 3)
+
+gseaplot2(
+  gse,
+  geneSetID = "GO:0007283",
+  title = paste0(
+    "GO:0007283",
+    "\nNES = ", NES,
+    ", q-value = ", qval
+  ),
+  pvalue_table = TRUE,
+  ES_geom = "line",
+  subplots = c(1, 2, 3)
+)# Extract values for the GO term
+term <- subset(gse@result, ID == "GO:0048232")
+
+NES <- round(term$NES, 2)
+qval <- signif(term$qvalue, 3)
+
+gseaplot2(
+  gse,
+  geneSetID = "GO:0048232",
+  title = paste0(
+    "GO:0048232",
+    "\nNES = ", NES,
+    ", q-value = ", qval
+  ),
+  pvalue_table = TRUE,
+  ES_geom = "line",
+  subplots = c(1, 2, 3)
+)
+# For Figure 4H, we manually created the files for genes tagged in these GO terms and found common gese by venny 2.1. The common genese were then evaluated in the 
+"All_genes_MRvsME_Brainvsbrain_paired_Genelist_chr_IDs.csv" file and the volcano plot of these genes were drawn by using the same package as above. 
