@@ -33,12 +33,31 @@ sample_31	brain	mr	A	58
 sample_62	brain	mr	B	58
 sample_61	brain	mr	C	35
 
+set.seed(5678)
 
+library(DESeq2)
+library(tximport)
+library(tidyverse)
+library(AnnotationDbi)
+library(AnnotationHub)
+library(org.Mm.eg.db)
+library(data.table) 
+library(clusterProfiler)
+library(TxDb.Mmusculus.UCSC.mm10.knownGene)
+library(EnhancedVolcano)
+library(ggstance)
+library(enrichplot)
+library(forcats)
+library(ggplot2)
+
+
+
+design = read.table("design_subset_RANM003.csv", header=T, sep=",")
 #Here we define spleen as reference factor for DE analyses
 design$tissue = relevel(as.factor(design$tissue), ref="spleen")
 #Here we define me as reference factor for DE analyses
 design$group = relevel(as.factor(design$group), ref="me")
-txi = readRDS("MRMEBR_subset_txi.rds")
+txi = readRDS("subset_txi_MRMEBRSP.rds")
 
 #In design: tissue for tissue-level analysis, group for me vs mr analysis while group:tissue for interaction model
 #Interaction term says us whether the gene is DE across  between two tissues conditionally on disease status
@@ -57,10 +76,10 @@ plotDispEsts(dds)
 #Model fit seems a good fit for data
 resultsNames(dds)
 
-# Brain vs Spleen interactive model
+# SC vs Spleen interactive model
 
-res_mrvsme_brain = results(dds,name="tissueSC.groupmr")
-res_mrvsme_brain_shrink = lfcShrink(dds, coef =  "tissueSC.groupmr", type="ashr")
+res_mrvsme_brain = results(dds,name="tissue_brain_vs_spleen")
+res_mrvsme_brain_shrink = lfcShrink(dds, coef =  "tissue_brain_vs_spleen", type="ashr")
 
 summary(res_mrvsme_brain_shrink)
 plotMA(res_mrvsme_brain_shrink)
@@ -131,6 +150,30 @@ EnhancedVolcano(merge_Chr_all_genes,
                 ylim = c(0,50),
                 colConnectors = 'black')
 
+signi.DEG.MRvsME.brain = res_mrvsme_brain_shrink[which(res_mrvsme_brain_shrink$padj<=0.1),]
+signi.DEG.MRvsME.brain
+
+
+
+rownames(signi.DEG.MRvsME.brain)
+sig.genes <- as.data.frame(signi.DEG.MRvsME.brain)
+
+signi.DEG.MRvsME.brain = res_mrvsme_brain_shrink[which(res_mrvsme_brain_shrink$padj<=0.1),]
+signi.DEG.MRvsME.brain
+
+sig.genes <- as.data.frame(signi.DEG.MRvsME.brain)
+
+genes_to_test <- rownames(signi.DEG.MRvsME.brain)
+
+genes_to_test
+ego_sex <- enrichGO(gene = genes_to_test,
+                    OrgDb = org.Mm.eg.db,
+                    keyType = "ENSEMBL",
+                    ont = "ALL",
+                    readable = TRUE)
+
+cluster_summary_FRFE.brain <-as.data.frame(ego_sex)
+fit <-plot(barplot(ego_sex,showCategory=10))
 
 # Gene set enrichment analysis
 
@@ -165,4 +208,74 @@ gse <- gseGO(geneList=gene_list,
              pAdjustMethod = "BH")
 
 GSE<-as.data.frame(gse)
-write.csv(GSE,"GSE_MRvsME_paired_brainvsbrain.csv")
+# Extract values for the GO term
+term <- subset(gse@result, ID == "GO:0007283")
+
+NES <- round(term$NES, 2)
+qval <- signif(term$qvalue, 3)
+
+gseaplot2(
+  gse,
+  geneSetID = "GO:0007283",
+  title = paste0(
+    "GO:0007283",
+    "\nNES = ", NES,
+    ", q-value = ", qval
+  ),
+  pvalue_table = TRUE,
+  ES_geom = "line",
+  subplots = c(1, 2, 3)
+)# Extract values for the GO term
+term <- subset(gse@result, ID == "GO:0048232")
+
+NES <- round(term$NES, 2)
+qval <- signif(term$qvalue, 3)
+
+gseaplot2(
+  gse,
+  geneSetID = "GO:0048232",
+  title = paste0(
+    "GO:0048232",
+    "\nNES = ", NES,
+    ", q-value = ", qval
+  ),
+  pvalue_table = TRUE,
+  ES_geom = "line",
+  subplots = c(1, 2, 3)
+)
+
+# Extract values for the GO term
+term <- subset(gse@result, ID == "GO:0007283")
+
+NES <- round(term$NES, 2)
+qval <- signif(term$qvalue, 3)
+
+gseaplot2(
+  gse,
+  geneSetID = "GO:0007283",
+  title = paste0(
+    "GO:0007283",
+    "\nNES = ", NES,
+    ", q-value = ", qval
+  ),
+  pvalue_table = TRUE,
+  ES_geom = "line",
+  subplots = c(1, 2, 3)
+)# Extract values for the GO term
+term <- subset(gse@result, ID == "GO:0016055")
+
+NES <- round(term$NES, 2)
+qval <- signif(term$qvalue, 3)
+
+gseaplot2(
+  gse,
+  geneSetID = "GO:0016055",
+  title = paste0(
+    "GO:0016055",
+    "\nNES = ", NES,
+    ", q-value = ", qval
+  ),
+  pvalue_table = TRUE,
+  ES_geom = "line",
+  subplots = c(1, 2, 3)
+)
