@@ -1,0 +1,121 @@
+set.seed(5678)
+
+library(DESeq2)
+library(tximport)
+library(tidyverse)
+library(AnnotationDbi)
+library(AnnotationHub)
+library(org.Mm.eg.db)
+library(data.table) 
+library(clusterProfiler)
+library(TxDb.Mmusculus.UCSC.mm10.knownGene)
+library(EnhancedVolcano)
+library(ggstance)
+library(enrichplot)
+library(forcats)
+library(ggplot2)
+
+
+
+design = read.table("design_subset_RANM003(MRME).csv", header=T, sep=",")
+
+
+design_subset_RANM003(MRME).csv
+sample	group	pair_id	day_sacrifice
+sample_31	mr	A	58
+sample_62	mr	B	58
+sample_61	mr	C	35
+sample_37	fe	A	58
+sample_39	fe	B	58
+sample_83	fe	C	35
+
+#Here we define me as reference factor for DE analyses
+design$group = relevel(as.factor(design$group), ref="fe")
+txi = readRDS("MRFEBR(MRME)txi.rds")
+
+#In design: tissue for tissue-level analysis, group for me vs mr analysis while group:tissue for interaction model
+#Interaction term says us whether the gene is DE across  between two tissues conditionally on disease status
+
+dds = DESeqDataSetFromMatrix(countData= round(txi$counts), colData = design, design = ~pair_id+group)
+plot(rowMeans(round(txi$counts)), apply(round(txi$counts), 1, var), log="xy")
+abline(0,1, lwd=2, lty=2)
+#We do have indeed some surdispersion
+
+#Basic Usage 
+dds = DESeq(dds)
+
+#Graphical Check for model mean-disp fitting
+plotDispEsts(dds)
+
+#Model fit seems a good fit for data
+resultsNames(dds)
+
+
+res_mrvsme_brain = results(dds,name="group_mr_vs_fe")
+res_mrvsme_brain_shrink = lfcShrink(dds, coef =  "group_mr_vs_fe", type="ashr")
+
+summary(res_mrvsme_brain_shrink)
+plotMA(res_mrvsme_brain_shrink)
+
+res_mrvsme_brain_shrink.df <- as.data.frame(res_mrvsme_brain_shrink)
+
+
+
+res_mrvsme_brain_shrink.df$symbol <-mapIds(org.Mm.eg.db, keys = rownames(res_mrvsme_brain_shrink.df), keytype = "ENSEMBL",column = 'SYMBOL')
+res_mrvsme_brain_shrink.df
+
+write.csv(res_mrvsme_brain_shrink.df,"res_mrvsme_brain_shrink.df(paired).csv")
+
+#to annnotate Significant genes against their respective chromosomes
+
+genes <- genes(TxDb.Mmusculus.UCSC.mm10.knownGene)
+genes_df <- as.data.frame(genes)
+entrez <-  mapIds(org.Mm.eg.db, rownames(res_mrvsme_brain_shrink.df), keytype = 'ENSEMBL', column = 'ENTREZID')
+entrez<- as.data.frame(entrez)
+
+data_all <- merge.data.table(entrez,    
+                             genes_df,
+                             by.x = "entrez",
+                             by.y = "gene_id")
+data_all
+
+Ensembl_GeneNames <- bitr(data_all$entrez, fromType = "ENTREZID",
+                          toType = c("SYMBOL"),
+                          OrgDb = org.Mm.eg.db)
+data_all <- merge.data.table(Ensembl_GeneNames,    
+                             data_all,
+                             by.x = "ENTREZID",
+                             by.y = "entrez")
+
+
+merge_Chr_all_genes<- as.data.frame(merge_Chr_all_genes)
+
+X_data <- merge_Chr_all_genes[merge_Chr_all_genes$seqnames == "chrX", ]
+EnhancedVolcano(X_data,
+                lab = X_data$symbol,
+                selectLab = c("Suv39h1","Tbc1d25"),
+                x = 'log2FoldChange',
+                y = 'pvalue',
+                xlab = bquote(~Log[2]~ 'fold change'),
+                title = 'M_severevsM_Mild_SpleenvsSpleen',
+                subtitle = "All_genes",
+                pCutoff = 0.05,
+                FCcutoff = 1.5,
+                pointSize = 1,
+                labSize = 8.0,
+                labCol = 'blue',
+                labFace = 'bold',
+                boxedLabels = TRUE,
+                col = c("grey","navyblue","red","green"),
+                colAlpha = 1/5,
+                legendPosition = 'right',
+                legendLabSize = 14,
+                legendIconSize = 1.0,
+                drawConnectors = TRUE,
+                widthConnectors = 1,
+                arrowheads = FALSE,
+                lengthConnectors = unit(1, 'npc'),
+                xlim = c(-10, 10),
+                ylim = c(0,10),
+                colConnectors = 'black')
+
