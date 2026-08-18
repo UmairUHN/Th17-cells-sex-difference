@@ -1,4 +1,4 @@
-# Transcriptional profiling of male, female and FCG mice derived MOG[35-55]-specific Th17 cells in an adoptive transfer model of chronic experimental autoimmune encephalomyelitis 
+# Transcriptional profiling of male, female and FCG mice derived MOG<sub>[35-55] </sub>-specific Th17 cells in an adoptive transfer model of chronic experimental autoimmune encephalomyelitis 
 ## Project Overview
 This project investigates how **sex chromosomes and sex hormones influence the pathogenicity of Th17 cells** in a chronic autoimmune setting. Using experimental autoimmune encephalomyelitis (EAE), a mouse model of multiple sclerosis, we examined why Th17 cells derived from male and female animals can differ in their ability to induce disease.
 
