@@ -1,0 +1,394 @@
+# Load Libraries 
+library(tidyverse) 
+library(rcartocolor) 
+library(DESeq2) 
+library(dplyr) 
+library(ggplot2) 
+library(ggrepel) 
+library(gplots) 
+library(RColorBrewer) 
+library(pheatmap) 
+library(matrixStats) 
+library(lattice) 
+library(gtools) 
+library(readr) 
+library(tximport) 
+library(apeglm) 
+library(biomaRt) 
+library(melt) 
+library(reshape) 
+library(ggplot2)
+library(DEGreport) 
+library(DOSE) 
+
+#Prepare the list of files to import (fichier) 
+
+fichiers <- dir(path = "quant/autres/female_1C6_vs_XX_Th17_cells", pattern = "tsv", recursive = TRUE, full.names = TRUE) 
+names(fichiers) <- dir("quant/autres/female_1C6_vs_XX_Th17_cells") 
+ 
+#Do the correspondance between genes and transcripts IDs 
+tx2gene <- read_tsv("tx2gene.tsv") 
+
+
+#Import counts 
+
+txi <- tximport(fichiers, type = "kallisto", tx2gene = tx2gene) 
+
+#Write the counts to an object 
+data <- txi$counts %>%  
+  round() %>%  
+
+  data.frame() 
+
+#Create metadata 
+
+sampletype <- factor(c(rep("female",3), rep("xx", 3))) 
+
+meta <- data.frame(sampletype, row.names = colnames(txi$counts)) 
+
+#Check that sample names match in both files 
+all(colnames(txi$counts) %in% rownames(meta)) 
+all(colnames(txi$counts) == rownames(meta)) 
+ 
+#Create DESeq2Dataset object 
+dds <- DESeqDataSetFromTximport(txi, colData = meta, design = ~ sampletype) 
+#Generate the normalize counts 
+dds <- estimateSizeFactors(dds) 
+sizeFactors(dds) 
+normalized_counts <- counts(dds, normalized=TRUE) 
+
+ 
+#Create DESeq2Dataset object 
+
+dds <- DESeqDataSetFromTximport(txi, colData = meta, design = ~ sampletype) 
+
+ 
+#set the factor level (nod as reference) 
+
+dds$sampletype <- relevel(dds$sampletype, ref = "female") 
+
+ 
+
+#Run analysis and summarize it 
+
+dds <- DESeq(dds) 
+
+res <- results(dds) 
+
+summary(res) 
+
+ 
+
+#Plot dispersion estimates 
+
+plot(log(mcols(dds)$baseMean), log(mcols(dds)$baseVar)) 
+
+abline(a=0,b=1, col="red", lwd=2, lty=2) 
+
+plotDispEsts(dds, ylim = c(1e-4, 1e1)) 
+
+ 
+
+#Non-parametric regression "local" and MAP recalculation to adjust the mathematical approach to our actual gene set dispersion and variance 
+
+dds <- estimateDispersionsFit(dds, fitType = "local") 
+
+dds <- estimateDispersionsMAP(dds) 
+
+plotDispEsts(dds, ylim = c(1e-4, 1e1)) 
+
+ 
+
+ 
+
+#Extract results 
+
+res_table <- results(dds, alpha = 0.05) 
+
+summary(res_table) 
+
+ 
+
+#What is stored in results? 
+
+res_table %>%  
+
+  data.frame() %>% 
+
+  View() 
+
+ 
+
+#Filter genes by zero expression 
+
+res_table[which(res_table$baseMean == 0),] %>%  
+
+  data.frame() %>% 
+
+  View() 
+
+ 
+
+#Filter genes that have an extreme outlier 
+
+res_table[which(is.na(res_table$pvalue) &  
+
+                  is.na(res_table$padj) & 
+
+                  res_table$baseMean > 0),] %>%  
+
+  data.frame() %>% 
+
+  View() 
+
+ 
+
+#Filter genes below the low mean threshold 
+
+res_table[which(!is.na(res_table$pvalue) &  
+
+                  is.na(res_table$padj) &  
+
+                  res_table$baseMean > 0),] %>%  
+
+  data.frame() %>% 
+
+  View() 
+
+ 
+
+#Apply fold change shrinkage 
+
+resultsNames(dds) 
+
+res_table <- lfcShrink(dds, coef="sampletype_xx_vs_female", type="apeglm") 
+
+ 
+
+#MA plot using shrunken fold changes 
+
+plotMA(res_table, ylim=c(-10,10)) 
+
+ 
+
+#Summarize results 
+
+summary(res_table, alpha = 0.05) 
+
+ 
+
+#Set thresholds 
+
+padj.cutoff <- 0.05 
+
+ 
+
+#Create a tibble of results 
+
+res_table_tb <- res_table %>% 
+
+  data.frame() %>% 
+
+  rownames_to_column(var="gene") %>%  
+
+  as_tibble() 
+
+ 
+
+#Subset the tibble to keep only significant genes 
+
+sig <- res_table_tb %>% 
+
+  filter(padj < padj.cutoff) 
+
+ 
+
+#Create a metadata tibble from the data frame (don't lose the row names) 
+
+mouse_meta <- meta %>%  
+
+  rownames_to_column(var="samplename") %>%  
+
+  as_tibble() 
+
+ 
+
+#Convert normalized_counts to a data frame and transfer the row names to a new column called "gene" 
+
+normalized_counts <- counts(dds, normalized=T) %>%  
+
+  data.frame() %>% 
+
+  rownames_to_column(var="gene")  
+
+ 
+
+#Merge together (ensembl IDs), the normalized counts data frame with a subset of the annotations in the tx2gene data frame  
+
+musmusculusannot <- tx2gene %>%  
+
+  dplyr::select(GENEID, GENENAME) %>%  
+
+  dplyr::distinct() 
+
+ 
+
+#Remove the characters after the point(.) in the gene column of res_table_tb 
+
+#Create the "a" table for having gene name without the characters after the point(.) 
+
+a <- gsub("\\..*","",musmusculusannot$GENEID) 
+
+#Create an empty column  
+
+musmusculusannot <- musmusculusannot %>% mutate(gene = "") 
+
+#Populate the gene column with contents of the a table  
+
+musmusculusannot$gene <- as.character(a) 
+
+ 
+
+#Bring in a column of gene names 
+
+normalized_counts <- merge(normalized_counts, musmusculusannot, by.x="gene", by.y="GENEID") 
+
+ 
+
+#Create a tibble for the normalized counts 
+
+normalized_counts <- normalized_counts %>% 
+
+  as_tibble() 
+
+ 
+
+###Plot for the top 20 DEG 
+
+#Order results by padj values 
+
+top20_sig_genes <- res_table_tb %>%  
+
+  arrange(padj) %>% 	#Arrange rows by padj values 
+
+  pull(gene) %>% 		#Extract character vector of ordered genes 
+
+  head(n=20)		#Extract the first 20 genes   
+
+ 
+
+#Normalized counts for top 20 significant genes 
+
+top20_sig_norm <- normalized_counts %>% 
+
+  filter(gene %in% top20_sig_genes) 
+
+ 
+
+#Gathering the columns to have normalized counts to a single column 
+
+gathered_top20_sig <- top20_sig_norm %>% 
+
+  gather(colnames(top20_sig_norm)[2:7], key = "samplename", value = "normalized_counts") 
+
+ 
+
+#Combine metadata information with melted normalized counts data into the same dataframe for ggplot 
+
+gathered_top20_sig <- inner_join(mouse_meta, gathered_top20_sig) 
+
+ 
+
+#Plot using ggplot2 
+
+ggplot(gathered_top20_sig) + 
+
+  geom_point(aes(x = GENENAME, y = normalized_counts, color = sampletype)) + 
+
+  scale_y_log10(oob = scales::squish_infinite) + 
+
+  xlab("Genes") + 
+
+  ylab("log10 Normalized Counts") + 
+
+  ggtitle("Top 20 Significant DE Genes") + 
+
+  theme_bw() + 
+
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) + 
+
+  theme(plot.title = element_text(hjust = 0.5)) 
+
+ 
+
+###Doing a heatmap 
+
+#Extract normalized expression for significant genes from the Igh and control samples 
+
+norm_sig <- normalized_counts[,c(1:4,5:8)] %>%  
+
+  filter(gene %in% sig$gene) 
+
+ 
+
+#Add all the real gene names as a column from the musmusculusannot table using bind_cols() 
+
+norm_sig <- bind_cols(norm_sig, GENENAME=musmusculusannot$GENENAME[match(norm_sig$gene, musmusculusannot$GENEID)]) 
+
+ 
+
+#Create an empty column to indicate which genes to label 
+
+norm_sig <- norm_sig %>% mutate(genelabels = "") 
+
+ 
+
+#remove redundant column 
+
+norm_sig <- subset(norm_sig, select = -c(GENENAME...8, GENENAME...9)) 
+
+#Add all the real gene names as a column from the musmusculusannot table using bind_cols() 
+
+norm_sig <- bind_cols(norm_sig, GENENAME=musmusculusannot$GENENAME[match(norm_sig$gene, musmusculusannot$GENEID)]) 
+
+ 
+
+#Populate the genelabels column with contents of the gene symbols column for the first 10 rows, i.e. the top 10 most significantly expressed genes 
+
+norm_sig$genelabels[1-20] <- as.character(norm_sig$GENENAME[1-20]) 
+
+ 
+
+#Set a color palette 
+
+redandblue <- brewer.pal(8, "RdBu") 
+
+ 
+
+#Run pheatmap using the metadata data frame for the annotation 
+
+pheatmap(norm_sig[2:7],  
+
+         color = rev(redandblue), 
+
+         cluster_rows = T,  
+
+         cluster_cols = F, 
+
+         show_rownames = T, 
+
+         show_colnames = F, 
+
+         border_color = "black",  
+
+         fontsize = 10,  
+
+         scale = "row",  
+
+         treeheight_row = 0, 
+
+         fontsize_row = 20,  
+
+         height = 20, 
+
+         labels_row = norm_sig$genelabels) 
