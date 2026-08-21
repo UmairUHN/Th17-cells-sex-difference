@@ -1,62 +1,42 @@
 # Transcriptional profiling of male, female and FCG mice derived MOG<sub>[35-55] </sub>-specific Th17 cells in an adoptive transfer model of chronic experimental autoimmune encephalomyelitis 
 ## Project Overview
-This project investigates how **sex chromosomes and sex hormones influence the pathogenicity of Th17 cells** in a chronic autoimmune setting. Using experimental autoimmune encephalomyelitis (EAE), a mouse model of multiple sclerosis, we examined why Th17 cells derived from male and female animals can differ in their ability to induce disease.
+This project investigates how sex chromosomes and sex hormones influence the pathogenicity of Th17 cells in chronic central nervous system (CNS) autoimmunity. Using experimental autoimmune encephalomyelitis (EAE), a mouse model of multiple sclerosis, we examined why Th17 cells derived from male and female animals can differ in their ability to induce disease.
 
-Our findings indicate that the increased pathogenicity of male-derived Th17 cells is influenced by both **sex chromosome complement and hormonal environment**, and that these effects are associated with distinct transcriptional and epigenetic regulators.
+Our findings indicate that the pathogenicity of Th17 cells is influenced by both sex chromosome complement and hormonal environment, and that these effects are associated with distinct transcriptional and epigenetic regulators.
 
 ## Experimental Approach
 
-To dissect the individual contributions of sex chromosomes and sex hormones, we used the **Four Core Genotypes (FCG) mouse model**, which separates chromosomal sex (XX vs. XY) from gonadal sex. These mice were further backcrossed with the **1C6 TCR-transgenic model**, allowing us to generate Th17 cells with a MOG[35-55] specific T-cell receptor background.
-
-By comparing Th17 cells derived from FCG × 1C6 mice with different combinations of sex chromosomes and hormonal environments, we were able to investigate the relative contributions of:
-
-* **Sex chromosome complement (XX vs. XY)**
-* **Sex hormone environment**
-
-RNA-seq was used to characterize transcriptional differences between Th17 cell populations with distinct pathogenic potentials and to identify candidate molecular regulators.
+To dissect the individual contributions of sex chromosomes and sex hormones, we used the Four Core Genotypes (FCG) mouse model, which disaggregates chromosomal sex (XX vs. XY) from gonadal sex. These mice were further backcrossed with the 1C6 TCR-transgenic model, allowing us to generate Th17 cells with a MOG[35-55] specific T-cell receptor background. We adoptively transferred these cells to NOD.Scid recipient mice to assess the contribution of these biological sex variables to Th17 cell mediated disease. 
+We used RNA-seq from both ex vivo-isolated and in vitro-differentiated FCG × 1C6, WT male 1C6 and female 1C6 Th17 cells to characterize the transcriptional differences underpinning our observations.
 
 ## Major Findings
 
-### 1. Male-derived Th17 cells exhibit increased pathogenicity
+### 1. Sex chromosomes and sex hormones differentially regulate disease severity
 
-We initially observed that **male-derived Th17 cells induced more severe EAE** compared with their female counterparts. This suggested that biological sex can influence the pathogenic potential of Th17 cells rather than simply affecting the recipient's response to inflammation.
+Using the FCG × 1C6 model, we separated the effects of chromosomal sex from the effects of the hormonal environment. Our data indicated that male sex hormones and XX chromosomes were associated with reduced EAE severity.
 
-### 2. Both sex chromosomes and sex hormones influence disease severity
+### 2.Pygo1 and Suv39H1 emerge as candidate regulators
 
-Using the FCG × 1C6 model, we separated the effects of chromosomal sex from the effects of the hormonal environment. Our data indicated that **XX chromosome complement and the female hormonal environment were associated with reduced EAE severity**, demonstrating that both sex chromosomes and sex hormones contribute to the regulation of Th17 pathogenicity.
+By comparing the transcriptome of ex vivo-enriched male Th17 cells that elicited severe disease (Msev) to those causing mild disease (Mmild), we found that androgen-
 
-This experimental design allowed us to distinguish effects that would otherwise be difficult to separate in conventional XX-female/XY-male comparisons.
+dependent processes and the Wnt signaling pathway were enriched in the latter. We further identified Pygo1 as an androgen- and Wnt-regulated regulator. Functional studies revealed that Pygo1 promotes a homeostatic Th17 phenotype.
 
-### 3. SUv39H1 and Pygo1 emerge as candidate regulators
+Comparison of Msev Th17 to ex vivo-isolated female Th17 cells revealed Suv39h1 as an X linked regulator that could suppress Th17 pathogenicity.
 
-To investigate the molecular mechanisms underlying sex-dependent differences in Th17 pathogenicity, we examined transcriptional differences between Th17 cell populations.
+### 3. Evidence for parental transgenerational effects and of RUNX2 as a candidate regulator of Th17 pathogenicity
+Interestingly, “HfXX” FCG × 1C6 Th17 cells show much greater pathogenicity than WT female 1C6 Th17 cells, despite the fact that they are genetically identical. These observations suggested the presence of **parent-of-origin/parental genetic effects** that cannot be explained solely by sex chromosome complement or hormonal status. This finding highlights an additional layer of genetic regulation that may influence the pathogenic phenotype of Th17 cells.
 
-This analysis identified **Suv39h1** and **Pygo1** as putative regulators associated with sex-driven differences in Th17 pathogenicity. These findings suggest that sex-dependent regulation of Th17 cells may involve both **epigenetic mechanisms and Wnt-associated transcriptional pathways**.
+By comparing transcriptomic profiles of HfXX 1C6 vs WT female 1C6 Th17 cells, we identified **Runx2** as another putative negative regulator associated with the pathogenic Th17 phenotype.
 
-### 4. Evidence for parental transgenerational effects
+### 4. XY Translocation Effects in FCG Mice
 
-Interestingly, comparisons of FCG × 1C6 mice with similar chromosomal and hormonal characteristics in parent mice (1C6), revealed additional differences in Th17 pathogenicity. These observations suggested the presence of **parent-of-origin/parental genetic effects** that cannot be explained solely by sex chromosome complement or hormonal status.
+Recent work (Panten et al, Nature Communications et al 2024; PMID 39394207) has identified a 3.2 Mb X-Y translocation to the transgenic Y chromosome of FCG mice that implicates 9 X-linked genes. Thus, genes normally located on the X chromosome may be present in different copy-number configurations between FCG genotypes. Such effects represent a potential confounding factor when interpreting phenotypes attributed solely to sex chromosome complement using FCG mice.
 
-This finding highlights an additional layer of genetic regulation that may influence the pathogenic phenotype of Th17 cells.
+To determine whether potential XY translocation effects could influence the interpretation of our findings, we performed an additional RNA-seq analysis using data generated from FCG × 1C6-derived Th17 cells.
 
-### 5. RUNX2 as a candidate regulator of Th17 pathogenicity
+We evaluated the X-linked genes reported in Panten et al and examined their expression across the relevant FCG genotypes. Two genes, Prps2 and Tmbs4x, showed a modest yet statistically significant increase in XY cells as opposed to XX cells at the transcriptional level; however no differences were seen at the protein level. These results indicate that potential XY translocation-associated effects should be considered when interpreting experiments using FCG mice. However, within our dataset, these effects do not appear to account for the principal transcriptional differences associated with Th17
 
-Finally, by comparing RNA-seq profiles from **more pathogenic and less pathogenic Th17 cell populations**, we identified **Runx2** as another putative regulator associated with the pathogenic Th17 phenotype.
-
-Together, these analyses provide candidate molecular mechanisms that may explain why otherwise similar Th17 populations can exhibit substantially different pathogenic potential.
-
-## 6. XY Translocation Effects in FCG Mice
-
-Recent work has identified potential **XY chromosome translocation effects in FCG mice**, including the possibility that genes normally located on the X chromosome may be present in different copy-number configurations between FCG genotypes. Such effects represent a potential confounding factor when interpreting phenotypes attributed solely to sex chromosome complement.
-
-In particular, **Tlr7** has been highlighted as a potential gene of interest in this context. To determine whether potential XY translocation effects could influence the interpretation of our findings, we performed an additional RNA-seq analysis using data generated from **FCG × 1C6-derived Th17 cells**.
-
-We evaluated the genes reported in **PMID: 39394207** and examined their expression across the relevant FCG genotypes. Of the genes identified in that study, none showed significant differences at the protein level in our experimental system. However, several genes showed significant differences at the RNA level.
-
-The **directionality and magnitude of these transcriptional differences** were further examined to determine whether they were consistent with potential chromosome-translocation effects. Although some transcriptional differences were detected, these genes did not represent the major transcriptional regulators associated with the pathogenic Th17 phenotype identified in our analyses.
-
-These results indicate that potential XY translocation-associated effects should be considered when interpreting experiments using FCG mice. However, within our dataset, these effects **do not appear to account for the principal transcriptional differences associated with Th17 pathogenicity** and therefore do not substantially alter the biological interpretation of the findings presented in this project.
-
+pathogenicity and therefore do not substantially alter the biological interpretation of the findings presented in this project.
 
 ## Overall Model
 
@@ -64,16 +44,13 @@ Our findings support a model in which **Th17 cell pathogenicity is shaped by mul
 
 The project therefore provides a framework for understanding how biological sex can influence autoimmune disease through direct effects on pathogenic immune-cell states.
 
-
 ## Data and Analysis
-
-The repository is intended to provide a **transparent and reproducible record of the computational analyses underlying the study**.
 
 **Session Information**
 
 All computational analyses for this project were performed in R/RStudio. The computational environment, including the R version, operating system, and package versions used for the analyses, is documented below to facilitate reproducibility.
 
-The raw FASTQ files (Deposited in the bioproject with accession ID GSE268964) were processed with tirmmoteric and the data was aligned to the mouse genomic reference by kallisto as described in the manuscript. The subsequent analysis was performed in the R studio with the foll
+The raw FASTQ files (Deposited in the bioproject with accession ID GSE268964) were processed with trimmomatic and the data was aligned to the mouse genomic reference by kallisto as described in the manuscript. The subsequent analysis was performed in the R studio with the foll
 
 The analyses were performed using R version 4.4.2 on Windows 10 (x64). The primary Bioconductor and CRAN packages used included DESeq2, clusterProfiler, enrichplot, EnhancedVolcano, tximport, ggplot2, tidyverse, GenomicFeatures, AnnotationHub, and related dependencies.
 
