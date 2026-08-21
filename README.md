@@ -50,7 +50,7 @@ The project therefore provides a framework for understanding how biological sex 
 
 All computational analyses for this project were performed in R/RStudio. The computational environment, including the R version, operating system, and package versions used for the analyses, is documented below to facilitate reproducibility.
 
-The raw FASTQ files (Deposited in the bioproject with accession ID GSE268964) were processed with trimmomatic and the data was aligned to the mouse genomic reference by kallisto as described in the manuscript. The subsequent analysis was performed in the R studio with the foll
+The raw FASTQ files (Deposited in the bioproject with accession ID GSE268964 and GSE344686 were processed with trimmomatic and the data was aligned to the mouse genomic reference by kallisto as described in the manuscript. The subsequent analysis was performed in the R studio with the foll
 
 The analyses were performed using R version 4.4.2 on Windows 10 (x64). The primary Bioconductor and CRAN packages used included DESeq2, clusterProfiler, enrichplot, EnhancedVolcano, tximport, ggplot2, tidyverse, GenomicFeatures, AnnotationHub, and related dependencies.
 
