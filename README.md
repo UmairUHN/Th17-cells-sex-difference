@@ -17,9 +17,7 @@ Using the FCG × 1C6 model, we separated the effects of chromosomal sex from the
 
 ### 2.Pygo1 and Suv39H1 emerge as candidate regulators
 
-By comparing the transcriptome of ex vivo-enriched male Th17 cells that elicited severe disease (Msev) to those causing mild disease (Mmild), we found that androgen-
-
-dependent processes and the Wnt signaling pathway were enriched in the latter. We further identified Pygo1 as an androgen- and Wnt-regulated regulator. Functional studies revealed that Pygo1 promotes a homeostatic Th17 phenotype.
+By comparing the transcriptome of ex vivo-enriched male Th17 cells that elicited severe disease (Msev) to those causing mild disease (Mmild), we found that androgen-dependent processes and the Wnt signaling pathway were enriched in the latter. We further identified Pygo1 as an androgen- and Wnt-regulated regulator. Functional studies revealed that Pygo1 promotes a homeostatic Th17 phenotype.
 
 Comparison of Msev Th17 to ex vivo-isolated female Th17 cells revealed Suv39h1 as an X linked regulator that could suppress Th17 pathogenicity.
 
@@ -34,9 +32,7 @@ Recent work (Panten et al, Nature Communications et al 2024; PMID 39394207) has 
 
 To determine whether potential XY translocation effects could influence the interpretation of our findings, we performed an additional RNA-seq analysis using data generated from FCG × 1C6-derived Th17 cells.
 
-We evaluated the X-linked genes reported in Panten et al and examined their expression across the relevant FCG genotypes. Two genes, Prps2 and Tmbs4x, showed a modest yet statistically significant increase in XY cells as opposed to XX cells at the transcriptional level; however no differences were seen at the protein level. These results indicate that potential XY translocation-associated effects should be considered when interpreting experiments using FCG mice. However, within our dataset, these effects do not appear to account for the principal transcriptional differences associated with Th17
-
-pathogenicity and therefore do not substantially alter the biological interpretation of the findings presented in this project.
+We evaluated the X-linked genes reported in Panten et al and examined their expression across the relevant FCG genotypes. Two genes, Prps2 and Tmbs4x, showed a modest yet statistically significant increase in XY cells as opposed to XX cells at the transcriptional level; however no differences were seen at the protein level. These results indicate that potential XY translocation-associated effects should be considered when interpreting experiments using FCG mice. However, within our dataset, these effects do not appear to account for the principal transcriptional differences associated with Th17 cell's pathogenicity and therefore do not substantially alter the biological interpretation of the findings presented in this project.
 
 ## Overall Model
 
