@@ -110,33 +110,3 @@ merge_Chr_all_genes <- merge.data.table(res_mrvsme_brain_shrink.df,
 merge_Chr_all_genes<- as.data.frame(merge_Chr_all_genes)
 
 write.csv(merge_Chr_all_genes,"DEGschromsomal_comparison.csv")
-
-EnhancedVolcano(merge_Chr_all_genes,
-                lab = merge_Chr_all_genes$symbol,
-                selectLab = c("Tmsb4x","Tlr8","Tlr7","Prps2","Frmpd4","Msl3","Arhgap6",
-                              "Amelx","Hccs"),
-                x = 'log2FoldChange',
-                y = 'pvalue',
-                xlab = bquote(~Log[2]~ 'fold change'),
-                title = 'X_linked_genes_translocat_ reported',
-                subtitle = "All_genes",
-                pCutoff = 0.05,
-                FCcutoff = 1,
-                pointSize = 1,
-                labSize = 3.0,
-                labCol = 'blue',
-                labFace = 'bold',
-                boxedLabels = TRUE,
-                col = c("grey","navyblue","red","green"),
-                colAlpha = 1/5,
-                legendPosition = 'right',
-                legendLabSize = 14,
-                legendIconSize = 1.0,
-                drawConnectors = TRUE,
-                widthConnectors = 1,
-                arrowheads = FALSE,
-                lengthConnectors = unit(1, 'npc'),
-                xlim = c(-5,5),
-                ylim = c(0,25
-                        ),
-                colConnectors = 'black')
