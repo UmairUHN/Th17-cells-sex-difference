@@ -30,7 +30,7 @@ sample_39	fe	B	58
 sample_83	fe	C	35
 
 #Here we define me as reference factor for DE analyses
-design$group = relevel(as.factor(design$group), ref="fe")
+design$group = relevel(as.factor(design$group), ref="mr")
 txi = readRDS("MRFEBR(MRME)txi.rds")
 
 #In design: tissue for tissue-level analysis, group for me vs mr analysis while group:tissue for interaction model
